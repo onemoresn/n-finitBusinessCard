@@ -1,6 +1,7 @@
 import { CardProfile } from '../types'
 import AnimatedBackground3D from './AnimatedBackground3D'
 import CardQRCode from './CardQRCode'
+import NFinitLogo from './NFinitLogo'
 
 interface Props {
   profile: CardProfile
@@ -119,6 +120,13 @@ export default function BusinessCard({ profile }: Props) {
             {aboutMe || 'Add a short bio in Settings to introduce yourself.'}
           </p>
           <CardQRCode />
+
+          <footer className="business-card__footer">
+            <NFinitLogo className="business-card__footer-logo" />
+            <p className="business-card__footer-copy">
+              &copy; {new Date().getFullYear()} N-Finit Development
+            </p>
+          </footer>
         </section>
       </div>
     </article>

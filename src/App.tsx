@@ -1,12 +1,32 @@
 import { useState } from 'react'
 import BusinessCard from './components/BusinessCard'
+import CreatePasswordSetup from './components/CreatePasswordSetup'
+import OnboardingWizard from './components/OnboardingWizard'
+import PasswordGate from './components/PasswordGate'
 import Settings from './components/Settings'
 import { CardProfile } from './types'
-import { loadProfile, saveProfile } from './storage'
+import {
+  isPasswordConfigured,
+  isWizardComplete,
+  loadProfile,
+  markWizardComplete,
+  saveProfile,
+} from './storage'
 
 export default function App() {
   const [profile, setProfile] = useState<CardProfile>(loadProfile)
+  const [wizardOpen, setWizardOpen] = useState(!isWizardComplete())
+  const [passwordSetupOpen, setPasswordSetupOpen] = useState(false)
+  const [passwordGateOpen, setPasswordGateOpen] = useState(false)
   const [settingsOpen, setSettingsOpen] = useState(false)
+
+  const openSettingsFlow = () => {
+    if (isPasswordConfigured()) {
+      setPasswordGateOpen(true)
+    } else {
+      setPasswordSetupOpen(true)
+    }
+  }
 
   const handleSave = (updated: CardProfile) => {
     setProfile(updated)
@@ -21,7 +41,7 @@ export default function App() {
 
         <button
           className="fab-settings"
-          onClick={() => setSettingsOpen(true)}
+          onClick={openSettingsFlow}
           aria-label="Open settings"
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -30,6 +50,36 @@ export default function App() {
           </svg>
         </button>
       </div>
+
+      {wizardOpen && (
+        <OnboardingWizard
+          onComplete={() => {
+            markWizardComplete()
+            setWizardOpen(false)
+          }}
+          onGetStarted={openSettingsFlow}
+        />
+      )}
+
+      {passwordSetupOpen && (
+        <CreatePasswordSetup
+          onSuccess={() => {
+            setPasswordSetupOpen(false)
+            setSettingsOpen(true)
+          }}
+          onClose={() => setPasswordSetupOpen(false)}
+        />
+      )}
+
+      {passwordGateOpen && (
+        <PasswordGate
+          onSuccess={() => {
+            setPasswordGateOpen(false)
+            setSettingsOpen(true)
+          }}
+          onClose={() => setPasswordGateOpen(false)}
+        />
+      )}
 
       {settingsOpen && (
         <Settings

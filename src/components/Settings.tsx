@@ -1,5 +1,6 @@
 import { useState, useRef, ChangeEvent, FormEvent } from 'react'
 import { CardProfile } from '../types'
+import { savePassword, verifyPassword } from '../storage'
 
 interface Props {
   profile: CardProfile
@@ -9,6 +10,10 @@ interface Props {
 
 export default function Settings({ profile, onSave, onClose }: Props) {
   const [form, setForm] = useState<CardProfile>({ ...profile })
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [passwordError, setPasswordError] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const update = (field: keyof CardProfile, value: string) => {
@@ -45,6 +50,25 @@ export default function Settings({ profile, onSave, onClose }: Props) {
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault()
+    setPasswordError('')
+
+    const wantsPasswordChange = currentPassword || newPassword || confirmPassword
+    if (wantsPasswordChange) {
+      if (!verifyPassword(currentPassword)) {
+        setPasswordError('Current password is incorrect.')
+        return
+      }
+      if (newPassword.length < 4) {
+        setPasswordError('New password must be at least 4 characters.')
+        return
+      }
+      if (newPassword !== confirmPassword) {
+        setPasswordError('New passwords do not match.')
+        return
+      }
+      savePassword(newPassword)
+    }
+
     onSave(form)
   }
 
@@ -151,6 +175,57 @@ export default function Settings({ profile, onSave, onClose }: Props) {
                 placeholder="www.yourcompany.com"
               />
             </label>
+          </fieldset>
+
+          <fieldset className="settings-section">
+            <legend className="settings-section__title">Security</legend>
+
+            <label className="field">
+              <span className="field__label">Current Password</span>
+              <input
+                type="password"
+                className="field__input"
+                value={currentPassword}
+                onChange={(e) => {
+                  setCurrentPassword(e.target.value)
+                  if (passwordError) setPasswordError('')
+                }}
+                placeholder="Required to change password"
+                autoComplete="current-password"
+              />
+            </label>
+
+            <label className="field">
+              <span className="field__label">New Password</span>
+              <input
+                type="password"
+                className="field__input"
+                value={newPassword}
+                onChange={(e) => {
+                  setNewPassword(e.target.value)
+                  if (passwordError) setPasswordError('')
+                }}
+                placeholder="Leave blank to keep current"
+                autoComplete="new-password"
+              />
+            </label>
+
+            <label className="field">
+              <span className="field__label">Confirm New Password</span>
+              <input
+                type="password"
+                className="field__input"
+                value={confirmPassword}
+                onChange={(e) => {
+                  setConfirmPassword(e.target.value)
+                  if (passwordError) setPasswordError('')
+                }}
+                placeholder="Re-enter new password"
+                autoComplete="new-password"
+              />
+            </label>
+
+            {passwordError && <p className="field__error" role="alert">{passwordError}</p>}
           </fieldset>
 
           <fieldset className="settings-section">
